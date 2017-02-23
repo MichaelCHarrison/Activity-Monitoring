@@ -10,45 +10,52 @@ This analysis makes use of data from a personal activity monitoring device. This
 
 The analysis is as proceeds:
 
-#Reading in the data:
+<br>
 
-```{r}
-knitr::opts_chunk$set(echo = TRUE)
+##Reading in the data:
+
+```{r echo=TRUE}
 activity <- read.csv("activity.csv")
 head(activity)
 ```
 
+<br>
 
-#What is the mean total number of steps taken per day?
+## Steps per day summary:
 
-###Total number of steps taken each day:
+####Total number of steps taken each day:
 ```{r, message = FALSE, results='asis'}
 library(dplyr); library(xtable)
 activity <- tbl_df(activity)
 totalsteps <- activity %>% 
         group_by(date) %>% 
-        summarise(totalsteps = sum(steps, omit.na = TRUE))
+        summarise(sumsteps = sum(steps, omit.na = TRUE))
 print(xtable::xtable(head(totalsteps, n=10), caption = "Total Steps per Day"),
       type = "html", html.table.attributes = "border='1'", include.rownames = FALSE)
 
 ```
 
-###Total number of steps taken per day:
+#### Histogram of steps taken daily:
 ```{r message=FALSE, warning=FALSE}
 library(ggplot2)
-qplot(totalsteps, data = totalsteps)
+qplot(sumsteps, data = totalsteps, 
+      main = "Daily Total Steps Count", xlab = "Daily Steps", ylab = "Count")
 ```
+<br>
 
-###Mean steps per day:
+#### Average steps per day:
 ```{r}
-mean(totalsteps$totalsteps, na.rm = TRUE)
+mean(totalsteps$sumsteps, na.rm = TRUE)
 ```
+<br>
 
-Median steps per day:
+#### Median steps per day:
 ```{r}
-median(totalsteps$totalsteps, na.rm = TRUE)
+median(totalsteps$sumsteps, na.rm = TRUE)
 ```
-#Average daily activity pattern?
+<br>
+
+##Average Daily Activity
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 timeseries <- activity %>%
@@ -61,19 +68,30 @@ ggplot(timeseries) +
         labs(title = "Average Steps by Hour of Day", x = "Time", y = "Average Steps")
 
 ```
+<br>
 
-#Missing Values
+#### Most active time interval
 
-### Missing values in data
+```{r}
+timeseries[which(timeseries$timesteps == max(timeseries$timesteps)),]
+```
+<br>
+
+##Missing Values
+
+#### Number of missing values in data:
 ```{r}
 sum(is.na(activity$steps))
 ```
+<br>
 
-### Filling in NA values
+#### Filling in NA values
+
+Using the mean number of steps taken from the original data by the interval time period of the day, the NA values in the steps column of the dataframe were filled.  
 ```{r}
 int_med <- activity %>%
         group_by(interval) %>%
-        summarise(steps = median(steps, na.rm = TRUE))
+        summarise(steps = mean(steps, na.rm = TRUE))
 
 filled_df <- activity
 
@@ -83,34 +101,41 @@ filled_df$steps <- ifelse(is.na(filled_df$steps) == TRUE,
 
 sum(is.na(filled_df$steps))
 ```
+<br>
 
-
+#### Histogram of steps taken daily (with NA values filled):
 
 ```{r message=FALSE}
 filled_df <- filled_df %>%
         group_by(date) %>%
         summarise(steps = sum(steps))
-qplot(steps, data = filled_df)
+qplot(steps, data = filled_df,
+      main = "Daily Total Steps Count", xlab = "Daily Steps", ylab = "Count")
 ```
+<br>
 
-###Mean of filled data set
+#### Average steps of NA filled data set
 ```{r}
 mean(filled_df$steps)
 ```
+<br>
 
-#### Median of filled data set
+#### Median of NA filled data set
 ```{r}
 median(filled_df$steps)
 ```
 
-#Weekday vs Weekend Activity Patterns
+From returned histogram and summary data based on dataset with NA values filled with step means by interval, the data does not appear to change the results significantly. 
+<br>
 
+##Weekday vs Weekend Activity Patterns
 
+By creating an weekday/weekend factor variable in the data, we can examine the difference in activity patterns of the weekdays vs. the weekends. 
 ```{r warning=FALSE}
 day_diff <- activity
 weekends <- c("Saturday", "Sunday")
 day_diff$daytype <- ifelse(weekdays(as.Date(day_diff$date)) %in% weekends,
-                            "weekend", "weekday")
+                            "Weekend", "Weekday")
 day_diff$daytype <- as.factor(day_diff$daytype)
 
 day_diff <- day_diff %>% 
@@ -126,3 +151,6 @@ ggplot(day_diff) +
 
 
 ```
+<br>
+
+The graph shows that activity throughout the weekend days is on average higher than that of the weekday. Intervals with greatest level of activity, however, is between the hours of 8AM and 9Am during the weekdays. 
