@@ -62,3 +62,44 @@ ggplot(timeseries) +
 
 ```
 
+#Missing Values
+
+### Missing values in data
+```{r}
+sum(is.na(activity$steps))
+```
+
+### Filling in NA values
+```{r}
+int_med <- activity %>%
+        group_by(interval) %>%
+        summarise(steps = median(steps, na.rm = TRUE))
+
+filled_df <- activity
+
+filled_df$steps <- ifelse(is.na(filled_df$steps) == TRUE,
+                          int_med$steps[int_med$interval %in% filled_df$interval], 
+                          filled_df$steps)
+
+sum(is.na(filled_df$steps))
+```
+
+
+
+```{r message=FALSE}
+filled_df <- filled_df %>%
+        group_by(date) %>%
+        summarise(steps = sum(steps))
+qplot(steps, data = filled_df)
+```
+
+###Mean of filled data set
+```{r}
+mean(filled_df$steps)
+```
+
+### Median of filled data set
+```{r}
+median(filled_df$steps)
+```
+
