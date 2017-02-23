@@ -1,0 +1,64 @@
+---
+title: "Activity Monitoring"
+author: "Michael Harrison"
+date: "February 22, 2017"
+output: html_document
+---
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the “quantified self” movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
+
+This analysis makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+The analysis is as proceeds:
+
+#Reading in the data:
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+activity <- read.csv("activity.csv")
+head(activity)
+```
+
+
+#What is the mean total number of steps taken per day?
+
+###Total number of steps taken each day:
+```{r, message = FALSE, results='asis'}
+library(dplyr); library(xtable)
+activity <- tbl_df(activity)
+totalsteps <- activity %>% 
+        group_by(date) %>% 
+        summarise(totalsteps = sum(steps, omit.na = TRUE))
+print(xtable::xtable(head(totalsteps, n=10), caption = "Total Steps per Day"),
+      type = "html", html.table.attributes = "border='1'", include.rownames = FALSE)
+
+```
+
+###Total number of steps taken per day:
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+qplot(totalsteps, data = totalsteps)
+```
+
+###Mean steps per day:
+```{r}
+mean(totalsteps$totalsteps, na.rm = TRUE)
+```
+
+Median steps per day:
+```{r}
+median(totalsteps$totalsteps, na.rm = TRUE)
+```
+#Average daily activity pattern?
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+timeseries <- activity %>%
+        group_by(interval) %>%
+        summarise(timesteps = mean(steps, na.rm=TRUE))
+
+ggplot(timeseries) +
+        geom_point(aes(interval, timesteps)) +
+        scale_x_continuous(breaks = seq(0, 2400, by = 200)) +
+        labs(title = "Average Steps by Hour of Day", x = "Time", y = "Average Steps")
+
+```
+
