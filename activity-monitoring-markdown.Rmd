@@ -98,8 +98,31 @@ qplot(steps, data = filled_df)
 mean(filled_df$steps)
 ```
 
-### Median of filled data set
+#### Median of filled data set
 ```{r}
 median(filled_df$steps)
 ```
 
+#Weekday vs Weekend Activity Patterns
+
+
+```{r warning=FALSE}
+day_diff <- activity
+weekends <- c("Saturday", "Sunday")
+day_diff$daytype <- ifelse(weekdays(as.Date(day_diff$date)) %in% weekends,
+                            "weekend", "weekday")
+day_diff$daytype <- as.factor(day_diff$daytype)
+
+day_diff <- day_diff %>% 
+        group_by(interval, daytype) %>%
+        summarise(avgsteps = mean(steps, na.rm = TRUE))
+
+ggplot(day_diff) +
+        geom_line(aes(interval, avgsteps)) +
+        facet_grid(daytype~.) +
+        labs(title = "Weekday vs. Weekend Activity",
+             x = "Time", y = "Steps") +
+        scale_x_continuous(breaks = seq(0, 2400, by= 200))
+
+
+```
